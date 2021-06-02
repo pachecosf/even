@@ -127,11 +127,14 @@ public class ReadThroughCache<T> {
      * https://en.wikipedia.org/wiki/Cache_stampede#Probabilistic_early_expiration
      */
     private boolean shouldRefreshEagerly(Entry entry) {
+        System.out.println(String.format("entry.expiresAtMS: %s", entry.expiresAtMS));
         if (entry.expiresAtMS == 0) {
             return false; // doesn't expire, so no need to refresh
         }
 
+        Double time1 = (entry.loadDurationMS * Math.log(Math.random()));
         long randomizedDeltaMS = (long) (entry.loadDurationMS * Math.log(Math.random()));
+        System.out.println(String.format("RandomizedDelta: %s", randomizedDeltaMS));
         return System.currentTimeMillis() + randomizedDeltaMS >= entry.expiresAtMS;
     }
 }

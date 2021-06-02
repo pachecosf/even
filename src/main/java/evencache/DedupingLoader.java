@@ -27,7 +27,7 @@ public class DedupingLoader<T> {
         synchronized (this) {
             future = this.futuresByKey.get(key);
 
-            if (future == null) {
+            if (future == null) { // If not, calls the given load function and returns its result.
                 // This is the first concurrent call for this key.
                 // Call the load function async'ly and save the future for other concurrent calls.
                 // Clear the future when complete to avoid holding onto data forever;
@@ -42,12 +42,9 @@ public class DedupingLoader<T> {
                 futuresByKey.put(key, future);
             }
         }
-
-        try {
-            return load.call();
-        } catch (Exception e) {
-            throw new ExecutionException(e);
-        }
+        // If a load is already in progress for the given key,
+        // waits for it to finish and returns its result.
+        return future.get();
     }
 
     private synchronized void clear(String key) {

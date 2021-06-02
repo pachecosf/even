@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,13 +12,21 @@ public class ReadThroughCacheTests {
 
     /** Returns a random number (with no expiry) on every invocation. */
     private final Callable<ReadThroughCache.LoadResultWithExpiry<Double>> loadRandomNumber = () -> {
-        return new ReadThroughCache.LoadResultWithExpiry(Math.random(), 0);
+        return new ReadThroughCache.LoadResultWithExpiry(Math.random(), 100);
     };
 
     /** Throws a random exception on every invocation. */
     private final Callable<ReadThroughCache.LoadResultWithExpiry<Double>> loadRandomError = () -> {
         throw new Exception("Error with random number " + Math.random());
     };
+
+
+    @Test
+    void testShouldRefreshEagerly() throws ExecutionException, InterruptedException {
+        ReadThroughCache<Double> cache = new ReadThroughCache<>(new MemoryCache<>());
+        cache.get("A", loadRandomNumber);
+        cache.get("A", loadRandomNumber);
+    }
 
     /**
      * Requesting items from the cache should load the items the first time and then
